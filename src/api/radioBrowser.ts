@@ -137,9 +137,10 @@ export async function fetchStations(
   params: SearchParams,
   offset = 0,
   signal?: AbortSignal,
+  limit = SEARCH_LIMIT,
 ): Promise<StationsPage> {
   const query = new URLSearchParams({
-    limit: String(SEARCH_LIMIT),
+    limit: String(limit),
     offset: String(offset),
     hidebroken: 'true',
     order: params.order,
@@ -157,7 +158,7 @@ export async function fetchStations(
   const data = await requestList('/json/stations/search', query, signal)
   return {
     stations: normalizeStations(data as RawStation[]),
-    hasMore: data.length === SEARCH_LIMIT,
+    hasMore: data.length === limit,
   }
 }
 
@@ -184,4 +185,11 @@ export async function fetchTags(signal?: AbortSignal): Promise<Tag[]> {
   return data
     .filter((tag) => tag.name?.trim())
     .map((tag) => ({ name: tag.name.trim(), stationCount: tag.stationcount }))
+}
+
+/** Станция по stationuuid; null — такой станции нет (или она без потока). */
+export async function fetchStationById(id: string, signal?: AbortSignal): Promise<Station | null> {
+  const query = new URLSearchParams({ uuids: id })
+  const data = (await requestList('/json/stations/byuuid', query, signal)) as RawStation[]
+  return normalizeStations(data)[0] ?? null
 }

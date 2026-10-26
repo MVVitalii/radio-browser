@@ -1,5 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import type { Station } from '../../types/station'
+import { isStation, readJson, writeJson } from '../../utils/storage'
 
 export interface PlayerState {
   station: Station | null
@@ -9,22 +10,41 @@ export interface PlayerState {
   isMuted: boolean
 }
 
-const initialState: PlayerState = {
-  station: null,
-  isPaused: true,
-  volume: 0.8,
-  isMuted: false,
-}
+export const PLAYER_STORAGE_KEY = 'radio-browser:player'
+
+const DEFAULT_VOLUME = 0.8
 
 const clamp = (value: number) => Math.min(1, Math.max(0, value))
 
+/** Что переживает перезагрузку: последняя станция и настройки звука. */
+type SavedPlayer = Pick<PlayerState, 'station' | 'volume' | 'isMuted'>
+
+export const savePlayer = ({ station, volume, isMuted }: PlayerState) =>
+  writeJson(PLAYER_STORAGE_KEY, { station, volume, isMuted } satisfies SavedPlayer)
+
+function loadPlayer(): PlayerState {
+  const saved = readJson(PLAYER_STORAGE_KEY) as Partial<Record<keyof SavedPlayer, unknown>> | null
+  return {
+    station: isStation(saved?.station) ? saved.station : null,
+    // Автозапуск без жеста пользователя браузер всё равно запретит — стартуем на паузе.
+    isPaused: true,
+    volume: typeof saved?.volume === 'number' ? clamp(saved.volume) : DEFAULT_VOLUME,
+    isMuted: saved?.isMuted === true,
+  }
+}
+
 const playerSlice = createSlice({
   name: 'player',
-  initialState,
+  initialState: loadPlayer,
   reducers: {
     playStation(state, action: PayloadAction<Station>) {
       state.station = action.payload
       state.isPaused = false
+    },
+    /** Выбрать станцию, но не запускать (например, открыта по ссылке). */
+    cueStation(state, action: PayloadAction<Station>) {
+      state.station = action.payload
+      state.isPaused = true
     },
     togglePause(state) {
       if (state.station) state.isPaused = !state.isPaused
@@ -50,7 +70,8 @@ const playerSlice = createSlice({
   },
 })
 
-export const { playStation, togglePause, setPaused, setVolume, toggleMute } = playerSlice.actions
+export const { playStation, cueStation, togglePause, setPaused, setVolume, toggleMute } =
+  playerSlice.actions
 export const { selectCurrentStation, selectIsPaused, selectVolume, selectIsMuted } =
   playerSlice.selectors
 export default playerSlice.reducer

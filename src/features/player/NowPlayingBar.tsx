@@ -15,6 +15,7 @@ import {
   toggleMute,
   togglePause,
 } from './playerSlice'
+import { ShareButton } from './ShareButton'
 import { useMediaSession } from './useMediaSession'
 
 type StreamState = 'connecting' | 'playing' | 'error'
@@ -123,7 +124,10 @@ export function NowPlayingBar() {
               </p>
             </div>
 
-            <FavoriteButton station={station} />
+            <div className="flex items-center">
+              <ShareButton station={station} />
+              <FavoriteButton station={station} />
+            </div>
 
             <div className="order-last flex w-full items-center gap-2 sm:order-none sm:w-44">
               <button

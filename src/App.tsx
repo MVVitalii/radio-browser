@@ -7,7 +7,9 @@ import { panelId, tabId, type TabId } from './components/tabIds'
 import { Tabs } from './components/Tabs'
 import { selectFavoritesCount } from './features/favorites/favoritesSlice'
 import { FavoritesList } from './features/favorites/FavoritesList'
+import { LuckyButton } from './features/player/LuckyButton'
 import { NowPlayingBar } from './features/player/NowPlayingBar'
+import { useSharedStation } from './features/player/useSharedStation'
 import { RecentList } from './features/recent/RecentList'
 import { SearchFilters } from './features/stations/SearchFilters'
 import { SearchResults } from './features/stations/SearchResults'
@@ -24,6 +26,7 @@ function App() {
   const searchInputRef = useRef<HTMLInputElement>(null)
   const focusSearch = useCallback(() => searchInputRef.current?.focus(), [])
   useHotkeys({ onFocusSearch: focusSearch })
+  useSharedStation()
 
   // Любое изменение условий поиска (в том числе клик по жанру в избранном) ведёт в эфир.
   const [prevFilters, setPrevFilters] = useState(filters)
@@ -48,7 +51,10 @@ function App() {
           inputRef={searchInputRef}
         />
         <SearchFilters />
-        <Tabs active={activeTab} onChange={setActiveTab} favoritesCount={favoritesCount} />
+        <div className="mt-8 flex flex-wrap items-start justify-between gap-3">
+          <Tabs active={activeTab} onChange={setActiveTab} favoritesCount={favoritesCount} />
+          <LuckyButton />
+        </div>
 
         <section
           id={panelId(activeTab)}

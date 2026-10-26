@@ -14,7 +14,7 @@ const TABS: { id: TabId; label: string }[] = [
 
 export function Tabs({ active, onChange, favoritesCount }: TabsProps) {
   return (
-    <div role="tablist" aria-label="Разделы" className="glass mt-8 inline-flex rounded-full p-1">
+    <div role="tablist" aria-label="Разделы" className="glass inline-flex rounded-full p-1">
       {TABS.map((tab) => {
         const isActive = tab.id === active
         return (
