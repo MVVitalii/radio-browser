@@ -1,6 +1,7 @@
-import { useEffect, useMemo, type ReactNode } from 'react'
+import { useEffect, useMemo } from 'react'
 import type { SortOrder } from '../../api/radioBrowser'
 import { useAppDispatch, useAppSelector } from '../../app/hooks'
+import { Select } from '../../components/Select'
 import { countryName } from '../../utils/country'
 import {
   defaultFilters,
@@ -17,18 +18,6 @@ const SORT_OPTIONS: { value: SortOrder; label: string }[] = [
   { value: 'bitrate', label: 'Лучшее качество' },
   { value: 'name', label: 'По названию' },
 ]
-
-const selectClassName =
-  'glass w-full min-w-0 cursor-pointer rounded-xl px-3 py-2.5 text-sm text-ink transition hover:border-white/20 disabled:cursor-wait disabled:opacity-60 sm:w-auto'
-
-function Field({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <label className="min-w-0">
-      <span className="sr-only">{label}</span>
-      {children}
-    </label>
-  )
-}
 
 export function SearchFilters() {
   const dispatch = useAppDispatch()
@@ -63,51 +52,45 @@ export function SearchFilters() {
 
   return (
     <div className="mt-6 grid grid-cols-2 items-center gap-2 sm:flex sm:flex-wrap">
-      <Field label="Страна">
-        <select
-          value={filters.countryCode}
-          disabled={isLoadingOptions}
-          onChange={(event) => dispatch(setFilters({ countryCode: event.target.value }))}
-          className={selectClassName}
-        >
-          <option value="">Все страны</option>
-          {countries.map((country) => (
-            <option key={country.code} value={country.code}>
-              {country.name}
-            </option>
-          ))}
-        </select>
-      </Field>
+      <Select
+        label="Страна"
+        value={filters.countryCode}
+        disabled={isLoadingOptions}
+        onChange={(event) => dispatch(setFilters({ countryCode: event.target.value }))}
+      >
+        <option value="">Все страны</option>
+        {countries.map((country) => (
+          <option key={country.code} value={country.code}>
+            {country.name}
+          </option>
+        ))}
+      </Select>
 
-      <Field label="Жанр">
-        <select
-          value={filters.tag}
-          disabled={isLoadingOptions}
-          onChange={(event) => dispatch(setFilters({ tag: event.target.value }))}
-          className={selectClassName}
-        >
-          <option value="">Все жанры</option>
-          {tags.map((tag) => (
-            <option key={tag} value={tag}>
-              #{tag}
-            </option>
-          ))}
-        </select>
-      </Field>
+      <Select
+        label="Жанр"
+        value={filters.tag}
+        disabled={isLoadingOptions}
+        onChange={(event) => dispatch(setFilters({ tag: event.target.value }))}
+      >
+        <option value="">Все жанры</option>
+        {tags.map((tag) => (
+          <option key={tag} value={tag}>
+            #{tag}
+          </option>
+        ))}
+      </Select>
 
-      <Field label="Сортировка">
-        <select
-          value={filters.order}
-          onChange={(event) => dispatch(setFilters({ order: event.target.value as SortOrder }))}
-          className={selectClassName}
-        >
-          {SORT_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </Field>
+      <Select
+        label="Сортировка"
+        value={filters.order}
+        onChange={(event) => dispatch(setFilters({ order: event.target.value as SortOrder }))}
+      >
+        {SORT_OPTIONS.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </Select>
 
       <label className="glass flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-ink transition hover:border-white/20">
         <input

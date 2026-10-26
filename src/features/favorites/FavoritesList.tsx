@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useAppDispatch, useAppSelector } from '../../app/hooks'
 import { EmptyState } from '../../components/EmptyState'
 import { HeartIcon } from '../../components/icons'
+import { Select } from '../../components/Select'
 import { StationGrid } from '../../components/StationGrid'
 import { selectVisibleFavorites } from './favoritesSelectors'
 import {
@@ -45,20 +46,17 @@ export function FavoritesList() {
             className="glass w-full rounded-xl px-3 py-2.5 text-sm text-ink placeholder:text-ink-muted/70 focus:border-amber-glow/60 focus-visible:outline-none"
           />
         </label>
-        <label>
-          <span className="sr-only">Сортировка избранного</span>
-          <select
-            value={sort}
-            onChange={(event) => dispatch(setFavoritesSort(event.target.value as FavoritesSort))}
-            className="glass w-full cursor-pointer rounded-xl px-3 py-2.5 text-sm text-ink sm:w-auto"
-          >
-            {SORT_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <Select
+          label="Сортировка избранного"
+          value={sort}
+          onChange={(event) => dispatch(setFavoritesSort(event.target.value as FavoritesSort))}
+        >
+          {SORT_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </Select>
       </div>
 
       <p aria-live="polite" className="mb-4 font-mono text-xs text-ink-muted">
