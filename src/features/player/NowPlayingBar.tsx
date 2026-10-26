@@ -7,12 +7,15 @@ import { isInsecureStream, isSecurePage } from '../../utils/stream'
 import { FavoriteButton } from '../favorites/FavoriteButton'
 import {
   selectCurrentStation,
+  selectIsMuted,
   selectIsPaused,
   selectVolume,
   setPaused,
   setVolume,
+  toggleMute,
   togglePause,
 } from './playerSlice'
+import { useMediaSession } from './useMediaSession'
 
 type StreamState = 'connecting' | 'playing' | 'error'
 
@@ -26,9 +29,12 @@ export function NowPlayingBar() {
   const station = useAppSelector(selectCurrentStation)
   const isPaused = useAppSelector(selectIsPaused)
   const volume = useAppSelector(selectVolume)
+  const isMuted = useAppSelector(selectIsMuted)
   const audioRef = useRef<HTMLAudioElement>(null)
   const [streamState, setStreamState] = useState<StreamState>('connecting')
   const streamUrl = station?.streamUrl
+
+  useMediaSession(station, isPaused)
 
   useEffect(() => {
     const audio = audioRef.current
@@ -65,6 +71,10 @@ export function NowPlayingBar() {
   useEffect(() => {
     if (audioRef.current) audioRef.current.volume = volume
   }, [volume])
+
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.muted = isMuted
+  }, [isMuted])
 
   const handleStreamError = () => {
     // Ошибка от сброса src при паузе — не ошибка потока.
@@ -115,19 +125,29 @@ export function NowPlayingBar() {
 
             <FavoriteButton station={station} />
 
-            <label className="order-last flex w-full items-center gap-3 px-1 sm:order-none sm:w-40 sm:px-0">
-              <VolumeIcon muted={volume === 0} className="size-5 shrink-0 text-ink-muted" />
-              <span className="sr-only">Громкость</span>
-              <input
-                type="range"
-                min={0}
-                max={1}
-                step={0.01}
-                value={volume}
-                onChange={(event) => dispatch(setVolume(Number(event.target.value)))}
-                className="w-full accent-amber-glow"
-              />
-            </label>
+            <div className="order-last flex w-full items-center gap-2 sm:order-none sm:w-44">
+              <button
+                type="button"
+                onClick={() => dispatch(toggleMute())}
+                aria-label={isMuted ? 'Включить звук' : 'Выключить звук'}
+                aria-pressed={isMuted}
+                className="grid size-9 shrink-0 place-items-center rounded-full text-ink-muted transition hover:bg-white/10 hover:text-ink"
+              >
+                <VolumeIcon muted={isMuted} className="size-5" />
+              </button>
+              <label className="flex flex-1 items-center">
+                <span className="sr-only">Громкость</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  value={isMuted ? 0 : volume}
+                  onChange={(event) => dispatch(setVolume(Number(event.target.value)))}
+                  className="w-full accent-amber-glow"
+                />
+              </label>
+            </div>
 
             <button
               type="button"

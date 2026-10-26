@@ -1,5 +1,5 @@
 import { makeStation } from '../../test/utils'
-import reducer, { playStation, setVolume, togglePause } from './playerSlice'
+import reducer, { playStation, setVolume, toggleMute, togglePause } from './playerSlice'
 
 describe('player slice', () => {
   const initial = reducer(undefined, { type: 'init' })
@@ -14,6 +14,16 @@ describe('player slice', () => {
     expect(reducer(initial, togglePause()).isPaused).toBe(true)
     const playing = reducer(initial, playStation(makeStation()))
     expect(reducer(playing, togglePause()).isPaused).toBe(true)
+  })
+
+  it('toggleMute; громкость 0 — тоже «без звука», при включении звук возвращается', () => {
+    const muted = reducer(initial, toggleMute())
+    expect(muted.isMuted).toBe(true)
+    expect(reducer(muted, toggleMute()).isMuted).toBe(false)
+
+    const silent = reducer(initial, setVolume(0))
+    expect(silent.isMuted).toBe(true)
+    expect(reducer(silent, toggleMute())).toMatchObject({ isMuted: false, volume: 0.5 })
   })
 
   it('громкость ограничена диапазоном 0…1', () => {
