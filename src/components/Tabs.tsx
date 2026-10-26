@@ -9,6 +9,7 @@ interface TabsProps {
 const TABS: { id: TabId; label: string }[] = [
   { id: 'search', label: 'Эфир' },
   { id: 'favorites', label: 'Избранное' },
+  { id: 'recent', label: 'Недавние' },
 ]
 
 export function Tabs({ active, onChange, favoritesCount }: TabsProps) {
@@ -25,7 +26,7 @@ export function Tabs({ active, onChange, favoritesCount }: TabsProps) {
             aria-selected={isActive}
             aria-controls={panelId(tab.id)}
             onClick={() => onChange(tab.id)}
-            className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${
+            className={`flex items-center gap-2 rounded-full px-3 py-2 text-sm sm:px-4 font-semibold transition ${
               isActive ? 'bg-amber-glow text-night-950' : 'text-ink-muted hover:text-ink'
             }`}
           >

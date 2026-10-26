@@ -1,7 +1,8 @@
 import { useAppDispatch, useAppSelector } from '../../app/hooks'
 import { HeartIcon } from '../../components/icons'
 import type { Station } from '../../types/station'
-import { selectIsFavorite, toggleFavorite } from './favoritesSlice'
+import { selectIsFavorite } from './favoritesSelectors'
+import { toggleFavorite } from './favoritesSlice'
 
 export function FavoriteButton({ station }: { station: Station }) {
   const dispatch = useAppDispatch()

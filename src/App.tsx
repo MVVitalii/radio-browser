@@ -8,6 +8,7 @@ import { selectFavoritesCount } from './features/favorites/favoritesSlice'
 import { FavoritesList } from './features/favorites/FavoritesList'
 import { NowPlayingBar } from './features/player/NowPlayingBar'
 import { SearchFilters } from './features/stations/SearchFilters'
+import { RecentList } from './features/recent/RecentList'
 import { SearchResults } from './features/stations/SearchResults'
 import { selectFilters } from './features/stations/stationsSlice'
 import { useStationSearch } from './features/stations/useStationSearch'
@@ -45,7 +46,9 @@ function App() {
           aria-labelledby={tabId(activeTab)}
           className="mt-6"
         >
-          {activeTab === 'search' ? <SearchResults onRetry={searchNow} /> : <FavoritesList />}
+          {activeTab === 'search' && <SearchResults onRetry={searchNow} />}
+          {activeTab === 'favorites' && <FavoritesList />}
+          {activeTab === 'recent' && <RecentList />}
         </section>
       </div>
       <NowPlayingBar />

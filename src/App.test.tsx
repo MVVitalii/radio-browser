@@ -121,6 +121,21 @@ describe('App', () => {
     expect(within(bar).getByRole('button', { name: 'Пауза' })).toBeInTheDocument()
   })
 
+  it('прослушанная станция появляется в «Недавних»', async () => {
+    mockRadioApi({ search: () => [makeRawStation({ name: 'Jazz FM' })] })
+    renderWithStore(<App />)
+
+    await user.click(screen.getByRole('tab', { name: 'Недавние' }))
+    expect(screen.getByRole('heading', { name: 'Эфир ещё не начался' })).toBeInTheDocument()
+
+    await user.type(searchInput(), 'jazz{Enter}')
+    await user.click(await screen.findByRole('button', { name: 'Слушать Jazz FM' }))
+    await user.click(screen.getByRole('tab', { name: 'Недавние' }))
+
+    const panel = screen.getByRole('tabpanel')
+    expect(within(panel).getByRole('heading', { name: 'Jazz FM' })).toBeInTheDocument()
+  })
+
   it('избранное не сбрасывается при новом поиске', async () => {
     mockRadioApi({
       search: (url) =>
