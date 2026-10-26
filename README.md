@@ -1,5 +1,7 @@
 # Radio Browser — ночной эфир
 
+**Демо: [radio-browser-iota.vercel.app](https://radio-browser-iota.vercel.app/)**
+
 Интернет-радио на React + TypeScript. Портфолио-проект: показывает Redux Toolkit и работу с чужим REST API через `fetch`. Своего бэкенда нет, станции берутся из открытого [Radio Browser API](https://www.radio-browser.info/).
 
 ## Возможности
