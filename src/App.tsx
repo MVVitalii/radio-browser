@@ -7,14 +7,24 @@ import { Tabs } from './components/Tabs'
 import { selectFavoritesCount } from './features/favorites/favoritesSlice'
 import { FavoritesList } from './features/favorites/FavoritesList'
 import { NowPlayingBar } from './features/player/NowPlayingBar'
+import { SearchFilters } from './features/stations/SearchFilters'
 import { SearchResults } from './features/stations/SearchResults'
+import { selectFilters } from './features/stations/stationsSlice'
 import { useStationSearch } from './features/stations/useStationSearch'
 
 function App() {
   const [query, setQuery] = useState('')
   const [activeTab, setActiveTab] = useState<TabId>('search')
   const favoritesCount = useAppSelector(selectFavoritesCount)
+  const filters = useAppSelector(selectFilters)
   const { searchNow } = useStationSearch(query)
+
+  // Любое изменение условий поиска (в том числе клик по жанру в избранном) ведёт в эфир.
+  const [prevFilters, setPrevFilters] = useState(filters)
+  if (filters !== prevFilters) {
+    setPrevFilters(filters)
+    setActiveTab('search')
+  }
 
   const handleQueryChange = (value: string) => {
     setQuery(value)
@@ -26,6 +36,7 @@ function App() {
       <div className="relative z-10 mx-auto min-h-screen max-w-6xl px-4 pb-44 pt-8 sm:px-6 sm:pb-36">
         <Header />
         <SearchBar value={query} onChange={handleQueryChange} onSubmit={searchNow} />
+        <SearchFilters />
         <Tabs active={activeTab} onChange={setActiveTab} favoritesCount={favoritesCount} />
 
         <section
@@ -34,11 +45,7 @@ function App() {
           aria-labelledby={tabId(activeTab)}
           className="mt-6"
         >
-          {activeTab === 'search' ? (
-            <SearchResults onSuggestion={handleQueryChange} onRetry={searchNow} />
-          ) : (
-            <FavoritesList />
-          )}
+          {activeTab === 'search' ? <SearchResults onRetry={searchNow} /> : <FavoritesList />}
         </section>
       </div>
       <NowPlayingBar />

@@ -7,7 +7,9 @@ import {
   selectIsPaused,
   togglePause,
 } from '../features/player/playerSlice'
+import { setFilters } from '../features/stations/stationsSlice'
 import type { Station } from '../types/station'
+import { countryName } from '../utils/country'
 import { isInsecureStream } from '../utils/stream'
 import { Equalizer } from './Equalizer'
 import { PauseIcon, PlayIcon } from './icons'
@@ -46,7 +48,9 @@ export function StationCard({ station, index }: StationCardProps) {
               {station.name}
             </h3>
             <p className="mt-0.5 truncate text-xs text-ink-muted">
-              {station.country || 'Страна не указана'}
+              {station.countryCode
+                ? countryName(station.countryCode, station.country)
+                : station.country || 'Страна не указана'}
             </p>
           </div>
           <FavoriteButton station={station} />
@@ -55,11 +59,15 @@ export function StationCard({ station, index }: StationCardProps) {
         {station.tags.length > 0 && (
           <ul className="flex flex-wrap gap-1.5" aria-label="Жанры">
             {station.tags.slice(0, 3).map((tag) => (
-              <li
-                key={tag}
-                className="max-w-full truncate rounded-full bg-white/5 px-2 py-0.5 font-mono text-[10px] text-ink-muted"
-              >
-                #{tag}
+              <li key={tag} className="min-w-0 max-w-full">
+                <button
+                  type="button"
+                  onClick={() => dispatch(setFilters({ tag }))}
+                  aria-label={`Искать по жанру ${tag}`}
+                  className="max-w-full truncate rounded-full bg-white/5 px-2 py-0.5 font-mono text-[10px] text-ink-muted transition hover:bg-amber-glow/15 hover:text-amber-glow"
+                >
+                  #{tag}
+                </button>
               </li>
             ))}
           </ul>

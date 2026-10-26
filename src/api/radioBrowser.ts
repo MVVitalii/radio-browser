@@ -8,8 +8,36 @@ export const API_SERVERS = [
 ]
 
 export const SEARCH_LIMIT = 40
+export const TAGS_LIMIT = 40
 
-/** Поля ответа /json/stations/search, которые нам нужны. */
+export type SortOrder = 'clickcount' | 'votes' | 'name' | 'bitrate'
+
+export interface SearchParams {
+  name: string
+  countryCode: string
+  tag: string
+  order: SortOrder
+  httpsOnly: boolean
+}
+
+export interface StationsPage {
+  stations: Station[]
+  /** Сервер вернул полную страницу — значит, может быть продолжение. */
+  hasMore: boolean
+}
+
+export interface Country {
+  code: string
+  name: string
+  stationCount: number
+}
+
+export interface Tag {
+  name: string
+  stationCount: number
+}
+
+/** Поля ответа /json/stations/*, которые нам нужны. */
 export interface RawStation {
   stationuuid: string
   name: string
@@ -22,6 +50,17 @@ export interface RawStation {
   countrycode: string
   codec: string
   bitrate: number
+}
+
+interface RawCountry {
+  name: string
+  iso_3166_1: string
+  stationcount: number
+}
+
+interface RawTag {
+  name: string
+  stationcount: number
 }
 
 export class ApiError extends Error {
@@ -71,22 +110,12 @@ function normalizeStations(data: RawStation[]): Station[] {
   return stations
 }
 
-export async function searchStationsByName(
-  name: string,
-  signal?: AbortSignal,
-): Promise<Station[]> {
-  const params = new URLSearchParams({
-    name: name.trim(),
-    limit: String(SEARCH_LIMIT),
-    hidebroken: 'true',
-    order: 'clickcount',
-    reverse: 'true',
-  })
-
+/** GET к API с перебором зеркал. Ожидает в ответе JSON-массив. */
+async function requestList(path: string, query: URLSearchParams, signal?: AbortSignal) {
   let lastError: unknown = null
   for (const server of API_SERVERS) {
     try {
-      const response = await fetch(`${server}/json/stations/search?${params}`, { signal })
+      const response = await fetch(`${server}${path}?${query}`, { signal })
       if (!response.ok) {
         throw new ApiError(`Radio Browser ответил ошибкой ${response.status}`)
       }
@@ -94,7 +123,7 @@ export async function searchStationsByName(
       if (!Array.isArray(data)) {
         throw new ApiError('Radio Browser вернул данные в неожиданном формате')
       }
-      return normalizeStations(data as RawStation[])
+      return data as unknown[]
     } catch (error) {
       // Отменённый запрос не повторяем на другом зеркале.
       if (signal?.aborted) throw error
@@ -102,4 +131,57 @@ export async function searchStationsByName(
     }
   }
   throw lastError
+}
+
+export async function fetchStations(
+  params: SearchParams,
+  offset = 0,
+  signal?: AbortSignal,
+): Promise<StationsPage> {
+  const query = new URLSearchParams({
+    limit: String(SEARCH_LIMIT),
+    offset: String(offset),
+    hidebroken: 'true',
+    order: params.order,
+    reverse: String(params.order !== 'name'),
+  })
+  const name = params.name.trim()
+  if (name) query.set('name', name)
+  if (params.countryCode) query.set('countrycode', params.countryCode)
+  if (params.tag) {
+    query.set('tag', params.tag)
+    query.set('tagExact', 'true')
+  }
+  if (params.httpsOnly) query.set('is_https', 'true')
+
+  const data = await requestList('/json/stations/search', query, signal)
+  return {
+    stations: normalizeStations(data as RawStation[]),
+    hasMore: data.length === SEARCH_LIMIT,
+  }
+}
+
+export async function fetchCountries(signal?: AbortSignal): Promise<Country[]> {
+  const query = new URLSearchParams({ order: 'stationcount', reverse: 'true', hidebroken: 'true' })
+  const data = (await requestList('/json/countries', query, signal)) as RawCountry[]
+  return data
+    .filter((country) => /^[A-Z]{2}$/.test(country.iso_3166_1) && country.stationcount > 0)
+    .map((country) => ({
+      code: country.iso_3166_1,
+      name: country.name,
+      stationCount: country.stationcount,
+    }))
+}
+
+export async function fetchTags(signal?: AbortSignal): Promise<Tag[]> {
+  const query = new URLSearchParams({
+    order: 'stationcount',
+    reverse: 'true',
+    hidebroken: 'true',
+    limit: String(TAGS_LIMIT),
+  })
+  const data = (await requestList('/json/tags', query, signal)) as RawTag[]
+  return data
+    .filter((tag) => tag.name?.trim())
+    .map((tag) => ({ name: tag.name.trim(), stationCount: tag.stationcount }))
 }

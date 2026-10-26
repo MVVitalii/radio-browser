@@ -1,39 +1,44 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
+import type { SearchParams } from '../../api/radioBrowser'
 import { useAppDispatch, useAppSelector } from '../../app/hooks'
-import { clearResults, searchStations, selectSearchQuery } from './stationsSlice'
+import { hasSearchCriteria, isSameSearch } from './searchParams'
+import { clearResults, searchStations, selectFilters, selectSearchParams } from './stationsSlice'
 
 export const SEARCH_DEBOUNCE_MS = 400
 
 /**
- * Запускает поиск по мере ввода (с задержкой) и отменяет предыдущий запрос,
- * если пользователь продолжил печатать.
+ * Запускает поиск по мере ввода и смены фильтров (с задержкой)
+ * и отменяет предыдущий запрос, если условия поменялись.
  */
 export function useStationSearch(query: string) {
   const dispatch = useAppDispatch()
-  const lastQuery = useAppSelector(selectSearchQuery)
+  const filters = useAppSelector(selectFilters)
+  const activeParams = useAppSelector(selectSearchParams)
   const requestRef = useRef<{ abort: () => void } | null>(null)
 
+  const params = useMemo<SearchParams>(() => ({ name: query.trim(), ...filters }), [query, filters])
+
   const run = useCallback(
-    (value: string) => {
+    (next: SearchParams) => {
       requestRef.current?.abort()
       requestRef.current = null
-      const trimmed = value.trim()
-      if (!trimmed) {
+      if (!hasSearchCriteria(next)) {
         dispatch(clearResults())
         return
       }
-      requestRef.current = dispatch(searchStations(trimmed))
+      requestRef.current = dispatch(searchStations(next))
     },
     [dispatch],
   )
 
   useEffect(() => {
-    if (query.trim() === lastQuery) return
-    const timer = setTimeout(() => run(query), SEARCH_DEBOUNCE_MS)
+    if (isSameSearch(params, activeParams)) return
+    if (!hasSearchCriteria(params) && activeParams === null) return
+    const timer = setTimeout(() => run(params), SEARCH_DEBOUNCE_MS)
     return () => clearTimeout(timer)
-  }, [query, lastQuery, run])
+  }, [params, activeParams, run])
 
-  const searchNow = useCallback(() => run(query), [run, query])
+  const searchNow = useCallback(() => run(params), [run, params])
 
   return { searchNow }
 }
