@@ -1,10 +1,13 @@
 import type { Station } from '../types/station'
 
-/** Зеркала публичного API: если одно не отвечает, пробуем следующее. */
+/**
+ * Зеркала публичного API: если одно не отвечает, пробуем следующее.
+ * all.api — DNS-балансировщик по всем живым серверам, последний запасной вариант.
+ */
 export const API_SERVERS = [
   'https://de1.api.radio-browser.info',
   'https://de2.api.radio-browser.info',
-  'https://fi1.api.radio-browser.info',
+  'https://all.api.radio-browser.info',
 ]
 
 export const SEARCH_LIMIT = 40
