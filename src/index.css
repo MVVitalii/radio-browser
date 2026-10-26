@@ -1,0 +1,99 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-display: 'Unbounded', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --color-night-950: #07060d;
+  --color-night-900: #0e0c1a;
+  --color-night-800: #17142a;
+  --color-night-700: #241f3d;
+
+  --color-amber-glow: #ffb547;
+  --color-amber-deep: #ff7a1a;
+  --color-signal: #4ef2e0;
+  --color-ink: #f3efe6;
+  --color-ink-muted: #a49fb8;
+
+  --shadow-glow: 0 0 24px -4px rgb(255 181 71 / 0.55);
+  --shadow-glow-signal: 0 0 24px -6px rgb(78 242 224 / 0.6);
+
+  --animate-eq: eq 1s ease-in-out infinite;
+  --animate-on-air: on-air 2s ease-in-out infinite;
+  --animate-rise: rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+
+  @keyframes eq {
+    0%, 100% { transform: scaleY(0.3); }
+    50% { transform: scaleY(1); }
+  }
+  @keyframes on-air {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.45; }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-night-950 font-sans text-ink antialiased;
+    background-image:
+      radial-gradient(60rem 30rem at 10% -10%, rgb(255 122 26 / 0.14), transparent 60%),
+      radial-gradient(50rem 30rem at 110% 10%, rgb(78 242 224 / 0.1), transparent 60%);
+    background-attachment: fixed;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-signal;
+  }
+}
+
+@layer components {
+  /* Плёночный шум поверх фона */
+  .bg-grain::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.07;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .glass {
+    @apply border border-white/10 bg-night-900/60 backdrop-blur-xl;
+  }
+
+  /* Эквалайзер: <span class="eq"><i></i><i></i><i></i><i></i></span> */
+  .eq {
+    @apply inline-flex h-4 items-end gap-0.5;
+  }
+  .eq > i {
+    @apply block h-full w-0.5 origin-bottom rounded-full bg-amber-glow animate-eq;
+  }
+  .eq > i:nth-child(2) { animation-delay: -0.4s; }
+  .eq > i:nth-child(3) { animation-delay: -0.7s; }
+  .eq > i:nth-child(4) { animation-delay: -0.2s; }
+
+  /* Шкала настройки приёмника */
+  .tuner-scale {
+    background-image: repeating-linear-gradient(
+      90deg,
+      rgb(243 239 230 / 0.35) 0 1px,
+      transparent 1px 8px
+    );
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
