@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from '../../app/hooks'
 import { Equalizer } from '../../components/Equalizer'
 import { PauseIcon, PlayIcon, VolumeIcon } from '../../components/icons'
 import { StationFavicon } from '../../components/StationFavicon'
+import { isInsecureStream, isSecurePage } from '../../utils/stream'
 import { FavoriteButton } from '../favorites/FavoriteButton'
 import {
   selectCurrentStation,
@@ -32,25 +33,30 @@ export function NowPlayingBar() {
   useEffect(() => {
     const audio = audioRef.current
     if (!audio || !streamUrl) return
-    audio.src = streamUrl
-    setStreamState('connecting')
-  }, [streamUrl])
-
-  useEffect(() => {
-    const audio = audioRef.current
-    if (!audio || !streamUrl) return
     if (isPaused) {
+      // Живой эфир не «замораживаем», а отключаемся от потока:
+      // после паузы играем с текущего момента и не качаем данные впустую.
       audio.pause()
+      if (audio.hasAttribute('src')) {
+        audio.removeAttribute('src')
+        audio.load()
+      }
       return
     }
-    // После ошибки потока переподключаемся заново.
-    if (audio.error) {
+    if (audio.getAttribute('src') !== streamUrl) {
       audio.src = streamUrl
       setStreamState('connecting')
     }
     audio.play().catch((error: unknown) => {
-      // play() прерывается сменой src — это нормально.
-      if (error instanceof DOMException && error.name === 'AbortError') return
+      if (error instanceof DOMException) {
+        // play() прерван сменой src — это нормально.
+        if (error.name === 'AbortError') return
+        // Браузер запретил автозапуск без жеста пользователя — просто ждём нажатия play.
+        if (error.name === 'NotAllowedError') {
+          dispatch(setPaused(true))
+          return
+        }
+      }
       setStreamState('error')
       dispatch(setPaused(true))
     })
@@ -61,13 +67,20 @@ export function NowPlayingBar() {
   }, [volume])
 
   const handleStreamError = () => {
+    // Ошибка от сброса src при паузе — не ошибка потока.
+    if (!audioRef.current?.getAttribute('src')) return
     setStreamState('error')
     dispatch(setPaused(true))
   }
 
+  const errorLabel =
+    station && isSecurePage() && isInsecureStream(station)
+      ? 'Браузер блокирует http-поток'
+      : 'Поток недоступен'
+
   const status = isPaused
     ? streamState === 'error'
-      ? { label: 'Поток недоступен', className: 'text-signal' }
+      ? { label: errorLabel, className: 'text-signal' }
       : { label: 'Пауза', className: 'text-ink-muted' }
     : streamState === 'playing'
       ? { label: 'В эфире', className: 'text-amber-glow animate-on-air' }

@@ -8,6 +8,7 @@ import {
   togglePause,
 } from '../features/player/playerSlice'
 import type { Station } from '../types/station'
+import { isInsecureStream } from '../utils/stream'
 import { Equalizer } from './Equalizer'
 import { PauseIcon, PlayIcon } from './icons'
 import { StationFavicon } from './StationFavicon'
@@ -68,6 +69,14 @@ export function StationCard({ station, index }: StationCardProps) {
           <span className="flex min-w-0 items-center gap-2 font-mono text-[11px] uppercase text-ink-muted">
             {isPlaying && <Equalizer />}
             <span className="truncate">{details || 'stream'}</span>
+            {isInsecureStream(station) && (
+              <span
+                title="Незащищённый поток: на https-сайте браузер может его заблокировать"
+                className="rounded border border-white/15 px-1 text-[9px] leading-4 text-ink-muted/80"
+              >
+                http
+              </span>
+            )}
           </span>
           <button
             type="button"
