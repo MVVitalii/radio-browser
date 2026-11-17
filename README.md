@@ -88,3 +88,13 @@ npm test           # 64 tests: API, slices, selectors, UI scenarios
 npm run lint
 npm run build
 ```
+
+## How this was built
+
+I built the first version quickly with an AI coding assistant (Claude Code): the scaffold and most of the features landed in one evening, which is why the early commit history is so compressed. After that I went through the code myself:
+
+- I checked how the search race conditions are handled (`abort()` plus the `requestId` check in the reducer) and covered both levels with tests.
+- I moved side effects out of reducers into listener middleware and kept the `HTMLAudioElement` out of the store.
+- I fixed what broke in real use, such as a dead API mirror and streams that lagged after a pause.
+
+Further work goes through issues and pull requests; see the [issue list](../../issues).
